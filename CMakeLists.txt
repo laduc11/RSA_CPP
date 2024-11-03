@@ -6,9 +6,19 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
 
+set(TARGET main)
+
 find_library(GMP_LIB gmp REQUIRED)
 find_library(GMPXX_LIB gmpxx REQUIRED)
 
-add_executable(main main.cpp)
+include_directories(
+    inc/
+)
 
-target_link_libraries(main PRIVATE ${GMP_LIB} ${GMPXX_LIB})
+add_executable(
+    ${TARGET}
+    main.cpp
+    src/RSA.cpp
+)
+
+target_link_libraries(${TARGET} PRIVATE ${GMP_LIB} ${GMPXX_LIB})

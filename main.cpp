@@ -1,5 +1,4 @@
-#include <iostream>
-#include <gmp.h>
+#include "main.h"
 
 int main()
 {
@@ -17,10 +16,10 @@ int main()
 
     // Base case
     if (n == 0 || n == 1) {
-        std::cout << "Fibonacci first = " << 1 << std::endl;
+        std::cout << "Fibonacci 1st = " << 1 << std::endl;
         return 0;
     } else if (n == 2) {
-        std::cout << "Fibonacci second = " << 2 << std::endl;
+        std::cout << "Fibonacci 2nd = " << 2 << std::endl;
         return 0;
     }
 
