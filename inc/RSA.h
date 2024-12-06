@@ -9,7 +9,9 @@ private:
 
 public:
     RSA();
+    RSA(int p, int q, int e);
     void calcGCD(mpz_t result, const mpz_t first, const mpz_t second);
+    void calcd();
 };
 
 #endif // RSA_H

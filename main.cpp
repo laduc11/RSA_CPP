@@ -1,7 +1,7 @@
 #include "main.h"
+#include "RSA.h"
 
-int main()
-{
+void calcFibo(uint32_t n) {
     mpz_t a, b;
     mpz_init(a);
     mpz_init(b);
@@ -9,18 +9,14 @@ int main()
     mpz_set_ui(a, 1);
     mpz_set_ui(b, 2);
 
-    unsigned int n;
-    std::cout << "Enter n = ";
-    std::cin >> n;
-
-
     // Base case
     if (n == 0 || n == 1) {
         std::cout << "Fibonacci 1st = " << 1 << std::endl;
-        return 0;
-    } else if (n == 2) {
+        return;
+    }
+    else if (n == 2) {
         std::cout << "Fibonacci 2nd = " << 2 << std::endl;
-        return 0;
+        return;
     }
 
     // Calcaulate fibonacci
@@ -30,6 +26,11 @@ int main()
     }
 
     std::cout << "Fibonacci " << n << "th = " << b << std::endl;
+}
 
+int main()
+{
+    // excepted d = 399553909
+    RSA rsa(18191, 40169, 156453389);
     return 0;
 }
