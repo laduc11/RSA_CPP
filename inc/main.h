@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <iostream>
+#include <bits/stdc++.h>
 #include <gmp.h>
 #include <gmpxx.h>
 
