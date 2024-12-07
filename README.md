@@ -41,6 +41,45 @@ In the **Edit Environment Variable** window, click **New** and add the following
 - `C:\msys64\ucrt64` 
 - `C:\msys64\ucrt64\bin` 
 
+# Setup Json file and build project in VS Code for Window
+## Step to set
+1. Firstly, config file **c_pp_properties.json**. Change parameter `compilerPath` to MSYS workspace that intall above and windowSdkVersion.
+   ```json
+    windowsSdkVersion": "10.0.19041.0
+    compilerPath": "C:\\msys64\\ucrt64\\bin\\g++.exe
+
+2. Nextly, add this code below to file **launch.json**. 
+    ```json
+    "configurations": [
+    {
+        "name": "(Windows) Launch",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "test.exe", // file exe to run
+        "args": ["300"], // this is optional
+        "stopAtEntry": false,
+        "cwd": "${fileDirname}",
+        "environment": [],
+        "console": "externalTerminal"
+    }]
+
+3. Thirdly, edit file **tasks.json**, this is the most important json file to build project with GMP library in Window. This file is too long to show, I just show some essential parameters:
+    ```json
+    "label": "C/C++: g++.exe build active file",
+	"command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+    "args": [
+		"-fdiagnostics-color=always",
+		"-g",
+		"${file}",
+		"-o",
+		"${fileDirname}\\${fileBasenameNoExtension}.exe",
+		"-lgmp",
+		"-lgmpxx"
+	],
+    "detail": "compiler: C:\\msys64\\ucrt64\\bin\\g++.exe"
+4. After editing 3 json above, in VS Code, you just press `Ctrl + Shift + B` on keyboard to build, the result if the building process successful is the file `.exe` was generated.
+5. Finally, run file `.exe` in your workspace.
+
 ## Linux
 Installing GMP in Linux is more simple. Just run command below
 ```bash
