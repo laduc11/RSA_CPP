@@ -101,7 +101,7 @@ unsigned int getSeed(int entropy)
  * @param rop 
  * @param number_of_bits 
  */
-void generate_large_prime(mpz_t rop, mp_bitcnt_t number_of_bits)
+void generateLargePrime(mpz_t rop, mp_bitcnt_t number_of_bits)
 {
     std::vector<std::thread> threads;
     std::atomic_bool primeFound(false);
@@ -178,7 +178,7 @@ void nBitsRandomOddNum(mpz_t rop, mp_bitcnt_t number_of_bits, const int entropy 
  * @param rounds 
  * @param primeFound 
  */
-void nBitsRandomPrime(mpz_t rop, mp_bitcnt_t number_of_bits, const int threadID, const int rounds, atomic_bool &primeFound)
+void nBitsRandomPrime(mpz_t rop, mp_bitcnt_t number_of_bits, const int threadID, const int rounds, std::atomic_bool &primeFound)
 {
     mpz_t random_number;
     mpz_init(random_number);

@@ -13,7 +13,7 @@ void power(mpz_t rop, const mpz_t x, const mpz_t y, const mpz_t n);
 
 // Generate random prime number
 unsigned int getSeed(int entropy = 0);
-void generate_large_prime(mpz_t rop, mp_bitcnt_t number_of_bits);
+void generateLargePrime(mpz_t rop, mp_bitcnt_t number_of_bits);
 bool lowLevelPrimalityCheck(mpz_t candidate);
 void nBitsRandomOddNum(mpz_t rop, mp_bitcnt_t number_of_bits, const int entropy = 0);
 

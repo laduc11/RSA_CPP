@@ -2,6 +2,10 @@
 
 RSA::RSA() {
     mpz_inits(p, q, e, d, n, NULL);
+    filePublicKey = "pub.key";
+    filePrivateKey = "prv.key";
+    initE();
+    calcD();
 }
 
 RSA::RSA(int p, int q, int e) {
@@ -15,19 +19,23 @@ RSA::RSA(int p, int q, int e) {
 }
 
 /**
+ * @brief Initialize parameter e
+ * 
+ */
+void RSA::initE()
+{
+    mpz_set_ui(e, 65537);
+}
+
+/**
  * @brief Calculate d from e and phi(n) in RSA algorithm
  * 
- * @param d 
- * @param e 
- * @param phi 
  */
 void RSA::calcD() {
     // s: sequence
     // r: remainder
     // e * x + phi(n) * y = gcd(e, phi(n))
 
-    // Initialize
-    mpz_t s, old_s, r, old_r, x, y;
     // Calculate phi(n) = (p - 1)(q - 1)
     mpz_t phi, temp_phi;
     mpz_inits(phi, temp_phi, NULL);
@@ -35,6 +43,8 @@ void RSA::calcD() {
     mpz_sub_ui(temp_phi, q, 1);
     mpz_mul(phi, phi, temp_phi);
 
+    // Initialize
+    mpz_t s, old_s, r, old_r, x, y;
     mpz_init_set_ui(s, 0);
     mpz_init_set_ui(old_s, 1);
     mpz_init_set(r, phi);
@@ -74,53 +84,136 @@ void RSA::calcD() {
     } else {
         mpz_set(d, x);
     }
+
+    // release memory
+    mpz_clears(s, old_s, r, old_r, x, y, temp_phi, phi, nullptr);
+}
+
+// Setter fuinctions
+void RSA::setFilePublicKey(std::string filename)
+{
+    this->filePublicKey = filename;
+}
+void RSA::setFilePrivateKey(std::string filename)
+{
+    this->filePrivateKey = filename;
+}
+void RSA::setFilePlaintext(std::string filename)
+{
+    this->filePlaintext = filename;
+}
+void RSA::setE(mpz_t e)
+{
+    mpz_set(this->e, e);
 }
 
 /**
- * @brief Import data like key or plaintext to mpz_t instance
+ * @brief Generate n-bits public key and private key
  * 
- * @param des 
- * @param filename 
+ * @param number_of_bits 
  */
-void importDataFromFile(mpz_t des, std::string filename)
+void RSA::generateKeyPair(mp_bitcnt_t number_of_bits)
 {
-    std::fstream file(filename, std::ios::in | std::ios::binary | std::ios::ate);
-    // Handle case open file fail
-    if (!file) {
-        std::cout << "Open file " << filename << " fail" << std::endl;
-        return;
-    }
-    // Get size of file and move cursor to the begining of file
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
+    std::thread t1 = std::thread(generateLargePrime, this->p, number_of_bits / 2);
+    std::thread t2 = std::thread(generateLargePrime, this->q, number_of_bits / 2);
+    t1.join();
+    t2.join();
 
-    uint8_t *buffer = new uint8_t[size];
+    std::cout << "p = ";
+    mpz_out_str(stdout, 10, this->p);
+    std::cout << std::endl;
 
-    if (file.read((char *)buffer, size)) {
-        // Read data success
-        mpz_import(des, (size_t)size, 1, sizeof(uint8_t), 0, 0, buffer);
-        std::cout << "Read data successfully" << std::endl;
-        mpz_out_str(stdout, 16, des);
-        std::cout << std::endl;
-        char *output = mpz_get_str(nullptr, 16, des);
+    std::cout << "q = ";
+    mpz_out_str(stdout, 10, this->q);
+    std::cout << std::endl;
 
-        std::string plaintext;
-        for (size_t i = 0; output[i] != '\0'; i += 2) {
-            // Convert each pair of hex digits to a character
-            std::string hexByte(output + i, 2);
-            char asciiChar = static_cast<char>(std::stoi(hexByte, nullptr, 16));
-            plaintext += asciiChar;
-        }
-        std::cout << "plaintext: " << plaintext << std::endl;
-    }
-    else
+    mpz_t phi_n;
+    mpz_init(phi_n);
+
+    // calculate n = p * q
+    mpz_mul(this->n, this->p, this->q);
+
+    // calculate phi(n) = (p - 1)(q - 1)
+    mpz_t p_minus_1, q_minus_1;
+    mpz_inits(p_minus_1, q_minus_1, nullptr);
+    mpz_sub_ui(p_minus_1, this->p, 1);
+    mpz_sub_ui(q_minus_1, this->q, 1);
+    mpz_mul(phi_n, p_minus_1, q_minus_1);
+
+    // CHECK e AND n PRIME TOGETHER
+    mpz_t check_gcd;
+    mpz_init(check_gcd);
+    calcGCD(check_gcd, phi_n, this->e);
+    while (true)
     {
-        std::cout << "Cannot reead file " << filename << std::endl;
-    }
+        if (mpz_cmp_si(check_gcd, 1) == 0)
+            break;
+        std::thread t1 = std::thread(generateLargePrime, this->p, number_of_bits / 2);
+        std::thread t2 = std::thread(generateLargePrime, this->q, number_of_bits / 2);
+        t1.join();
+        t2.join();
 
-    delete[] buffer;
+        // CALCULATE n
+        mpz_mul(this->n, this->p, this->q);
+        // CALCULATE PHI(N)
+        mpz_sub_ui(p_minus_1, this->p, 1);
+        mpz_sub_ui(q_minus_1, this->q, 1);
+        mpz_mul(phi_n, p_minus_1, q_minus_1);
+
+        // CHECK e AND n PRIME TOGETHER
+        calcGCD(check_gcd, phi_n, this->e);
+    }
+    calcD();
+    std::cout << "Store Public Key in file pub.key\n";
+    storeKey();
+
+    mpz_clears(phi_n, p_minus_1, q_minus_1, check_gcd, nullptr);
 }
 
-void GMP2File(const mpz_t raw_data, std::string filename) {
+/**
+ * @brief Write public key and private key to file
+ * 
+ */
+void RSA::storeKey()
+{
+    std::ofstream pub(this->filePublicKey), pvt(this->filePrivateKey);
+    std::cout << "Public key is stored in file pub.key...\n";
+    std::string n_str = mpz_get_str(nullptr, 16, this->n);
+    std::string d_str = mpz_get_str(nullptr, 16, this->d);
+    std::string e_str = mpz_get_str(nullptr, 16, this->e);
+    if (pub.is_open())
+    {
+        pub << "Public key:\n";
+        pub << e_str << '\n';
+        pub << "n:\n";
+        pub << n_str;
+    }
+    std::cout << "Private key is stored in file pvt.key...\n";
+    if (pvt.is_open())
+    {
+        pvt << "Private key:\n";
+        pvt << d_str << '\n';
+        pvt << "n:\n";
+        pvt << n_str;
+    }
+}
 
+/**
+ * @brief Compare Decrypted and original Message
+ * 
+ * @param msgFile 
+ * @param decFile 
+ * @return true 
+ * @return false 
+ */
+bool RSA::verified(std::string msgFile, std::string decFile)
+{
+    std::ifstream msg(msgFile), dec(decFile);
+    if (!msg.is_open() || !dec.is_open())
+        std::cerr << "Cannot open message file or decrypted message file.\n";
+    std::vector<char> bf1((std::istreambuf_iterator<char>(msg)), std::istreambuf_iterator<char>());
+    std::vector<char> bf2((std::istreambuf_iterator<char>(dec)), std::istreambuf_iterator<char>());
+    msg.close();
+    dec.close();
+    return bf1 == bf2;
 }

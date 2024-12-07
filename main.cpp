@@ -7,7 +7,7 @@ int main()
     rsa.setFilePlaintext("plaintext.txt");
     rsa.setFilePublicKey("public.key");
     rsa.setFilePrivateKey("private.key");
-    rsa.generateKeyPair();
+    rsa.generateKeyPair(2048);
     rsa.encrypt();
     rsa.decrypt();
     return 0;

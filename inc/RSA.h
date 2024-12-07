@@ -8,13 +8,17 @@
 #define DECODE_EXT  ".dec"
 #define KEY_EXT     ".key"
 
+#define PLAINTEXT_DIR   "plaintext/"
+#define CIPHERTEXT_DIR  "ciphertext/"
+#define KEY_DIR         "key/"
+#define DECRYPTED_DIR   "decrypted/"
+
 class RSA {
 private:
     mpz_t p, q, e, d, n;
-    std::string filePublicKey, filePrivateKey, filePlaintext;
+    std::string filePublicKey, filePrivateKey, filePlaintext, fileDecrypted;
 
-    void generateKey(mpz_t public_key, mpz_t private_key, mp_bitcnt_t number_of_bits);
-    void storeKey(const mpz_t public_key, const mpz_t private_key);
+    void storeKey();
     void initE();
     void calcD();
     bool verified(std::string msgFile, std::string decFile);
@@ -23,7 +27,7 @@ public:
     RSA();
     RSA(int p, int q, int e);
 
-    void generateKeyPair();
+    void generateKeyPair(mp_bitcnt_t number_of_bits);
     void setFilePublicKey(std::string filename);
     void setFilePrivateKey(std::string filename);
     void setFilePlaintext(std::string filename);
