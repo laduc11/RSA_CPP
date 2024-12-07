@@ -10,8 +10,11 @@ private:
 public:
     RSA();
     RSA(int p, int q, int e);
-    void calcGCD(mpz_t result, const mpz_t first, const mpz_t second);
     void calcd();
 };
+
+// Utils function;
+void calcGCD(mpz_t result, const mpz_t first, const mpz_t second);
+void importDataFromFile(mpz_t des, std::string filename);
 
 #endif // RSA_H

@@ -21,7 +21,7 @@ RSA::RSA(int p, int q, int e) {
  * @param first 
  * @param second 
  */
-void RSA::calcGCD(mpz_t result, const mpz_t first, const mpz_t second) {
+void calcGCD(mpz_t result, const mpz_t first, const mpz_t second) {
     mpz_t num_1, num_2;
     mpz_init_set(num_1, first);
     mpz_init_set(num_2, second);
@@ -106,4 +106,53 @@ void RSA::calcd() {
     } else {
         mpz_set(d, x);
     }
+}
+
+/**
+ * @brief Import data like key or plaintext to mpz_t instance
+ * 
+ * @param des 
+ * @param filename 
+ */
+void importDataFromFile(mpz_t des, std::string filename)
+{
+    std::fstream file(filename, std::ios::in | std::ios::binary | std::ios::ate);
+    // Handle case open file fail
+    if (!file) {
+        std::cout << "Open file " << filename << " fail" << std::endl;
+        return;
+    }
+    // Get size of file and move cursor to the begining of file
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    uint8_t *buffer = new uint8_t[size];
+
+    if (file.read((char *)buffer, size)) {
+        // Read data success
+        mpz_import(des, (size_t)size, 1, sizeof(uint8_t), 0, 0, buffer);
+        std::cout << "Read data successfully" << std::endl;
+        mpz_out_str(stdout, 16, des);
+        std::cout << std::endl;
+        char *output = mpz_get_str(nullptr, 16, des);
+
+        std::string plaintext;
+        for (size_t i = 0; output[i] != '\0'; i += 2) {
+            // Convert each pair of hex digits to a character
+            std::string hexByte(output + i, 2);
+            char asciiChar = static_cast<char>(std::stoi(hexByte, nullptr, 16));
+            plaintext += asciiChar;
+        }
+        std::cout << "plaintext: " << plaintext << std::endl;
+    }
+    else
+    {
+        std::cout << "Cannot reead file " << filename << std::endl;
+    }
+
+    delete[] buffer;
+}
+
+void GMP2File(const mpz_t raw_data, std::string filename) {
+
 }
