@@ -26,3 +26,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco install make cmake
 ```
 After that, set up `build` dictionary and run like Ubuntu
+
+## Compile and run manually
+Compile command:
+```bash
+g++ source_file.cpp -o main -lgmp -I.
+```
+Run command:
+```bash
+./main
+```
