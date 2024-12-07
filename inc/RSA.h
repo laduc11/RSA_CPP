@@ -4,8 +4,12 @@
 #include "main.h"
 
 class RSA {
+private:
+    mpz_t p, q, e, d, n;
+
 public:
-    void foo();
+    RSA();
+    void calcGCD(mpz_t result, const mpz_t first, const mpz_t second);
 };
 
 #endif // RSA_H
