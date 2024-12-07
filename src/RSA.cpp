@@ -176,19 +176,20 @@ void RSA::generateKeyPair(mp_bitcnt_t number_of_bits)
  */
 void RSA::storeKey()
 {
-    std::ofstream pub(this->filePublicKey), pvt(this->filePrivateKey);
-    std::cout << "Public key is stored in file pub.key...\n";
+    std::ofstream pub(KEY_DIR + this->filePublicKey), pvt(KEY_DIR + this->filePrivateKey);
+    std::cout << "Public key is stored in file "<< KEY_DIR + this->filePublicKey << "...\n";
     std::string n_str = mpz_get_str(nullptr, 16, this->n);
     std::string d_str = mpz_get_str(nullptr, 16, this->d);
     std::string e_str = mpz_get_str(nullptr, 16, this->e);
     if (pub.is_open())
     {
+        std::cout << "open success" << std::endl;
         pub << "Public key:\n";
         pub << e_str << '\n';
         pub << "n:\n";
         pub << n_str;
     }
-    std::cout << "Private key is stored in file pvt.key...\n";
+    std::cout << "Private key is stored in file " << KEY_DIR + this->filePrivateKey << "...\n";
     if (pvt.is_open())
     {
         pvt << "Private key:\n";
@@ -216,4 +217,206 @@ bool RSA::verified(std::string msgFile, std::string decFile)
     msg.close();
     dec.close();
     return bf1 == bf2;
+}
+
+/**
+ * @brief Encrypt message and save it to file .enc
+ * 
+ */
+void RSA::encrypt()
+{
+    std::cout << "public file: " << KEY_DIR + this->filePublicKey << std::endl;
+    std::cout << "msg file: " << PLAINTEXT_DIR + this->filePlaintext << std::endl;
+
+    std::ifstream in_key(KEY_DIR + this->filePublicKey), in_msg(PLAINTEXT_DIR + this->filePlaintext);
+    if (!in_key.is_open())
+    {
+        std::cerr << "Error open Public Key file.\n";
+        return;
+    }
+    if (!in_msg.is_open())
+    {
+        std::cerr << "Error opening Message file.\n";
+        return;
+    }
+
+    std::string line;
+    mpz_t pubkey, n;
+    mpz_inits(pubkey, n, nullptr);
+    while (getline(in_key, line))
+    {
+        if (line == "Public key:")
+        {
+            if (getline(in_key, line))
+            {
+                mpz_set_str(pubkey, line.c_str(), 16);
+            }
+            else
+            {
+                std::cerr << "Error reading public key value.\n";
+                return;
+            }
+        }
+
+        else if (line == "n:")
+        {
+            if (getline(in_key, line))
+            {
+                mpz_set_str(n, line.c_str(), 16);
+            }
+            else
+            {
+                std::cerr << "Error reading n value.\n";
+                return;
+            }
+        }
+    }
+
+    // Read the message from file and convert it to an integer
+    std::string msg;
+    std::stringstream ss;
+
+    // Đọc từng dòng trong tệp và nối vào stringstream
+    while (getline(in_msg, line))
+    {
+        ss << line << "\n"; // Lưu dữ liệu vào stringstream, bao gồm ký tự xuống dòng
+    }
+
+    // Chuyển đổi stringstream thành chuỗi
+    msg = ss.str();
+
+    std::cout << "Message: " << std::endl;
+
+    mpz_t rop, x;
+    mpz_inits(rop, x, nullptr);
+
+    // Chuyển đổi chuỗi tin nhắn thành số nguyên
+    mpz_set_ui(x, 0);
+    for (size_t i = 0; i < msg.size(); ++i)
+    {
+        mpz_mul_ui(x, x, 256);    // Mỗi ký tự có thể biểu diễn bởi một byte
+        mpz_add_ui(x, x, msg[i]); // Thêm giá trị ký tự vào số nguyên
+    }
+
+    std::cout << "msg (mpz_t) = ";
+    mpz_out_str(stdout, 10, x);
+    std::cout << std::endl;
+
+    // Thực hiện mã hóa RSA: rop = (x^pubkey) % n
+    power(rop, x, pubkey, n);
+
+    // STORE ROP TO .ENC FILE
+    std::string result = mpz_get_str(nullptr, 10, rop);
+    std::cout << "Encrypt message: " << result << std::endl;
+    std::string msgFile = this->filePlaintext;
+    std::string encFile = msgFile.replace(msgFile.find('.'), 4, ENCODE_EXT);
+
+    std::ofstream out(CIPHERTEXT_DIR + encFile);
+    if (out.is_open())
+    {
+        out << result;
+    }
+    out.close();
+    in_key.close();
+    in_msg.close();
+    return;
+}
+
+/**
+ * @brief Decrypted ciphertext, save value after decrypting to file
+ * 
+ */
+void RSA::decrypt()
+{
+    std::string msgFile = this->filePlaintext;
+    std::string encFile = CIPHERTEXT_DIR + msgFile.replace(msgFile.find('.'), 4, ENCODE_EXT);
+    std::string pvtFilename = KEY_DIR + this->filePrivateKey;
+    std::cout << "private file: " << pvtFilename << std::endl;
+    std::cout << "encFile file: " << encFile << std::endl;
+
+    std::ifstream in_key(pvtFilename), in_msg(encFile);
+    if (!in_key.is_open())
+        std::cerr << "Error open Private Key file.\n";
+    if (!in_msg.is_open())
+        std::cerr << "Error open Cipher file.\n";
+
+    std::string line;
+    mpz_t pvtkey, n;
+    mpz_inits(pvtkey, n, nullptr);
+
+    while (getline(in_key, line))
+    {
+        if (line == "Private key:")
+        {
+            getline(in_key, line);
+            mpz_set_str(pvtkey, line.c_str(), 16);
+        }
+        else if (line == "n:")
+        {
+            getline(in_key, line);
+            mpz_set_str(n, line.c_str(), 16);
+        }
+    }
+
+    // Read the message from file and convert it to an integer
+    std::string msg;
+    std::stringstream ss;
+
+    // Đọc từng dòng trong tệp và nối vào stringstream
+    while (getline(in_msg, line))
+    {
+        ss << line; // Lưu dữ liệu vào stringstreamg
+    }
+
+    // Chuyển đổi stringstream thành chuỗi
+    msg = ss.str();
+
+    mpz_t rop, x;
+    mpz_inits(rop, x, nullptr);
+    mpz_set_str(x, msg.c_str(), 10);
+
+    power(rop, x, pvtkey, n);
+
+    std::cout << "Decrypted message: ";
+    mpz_out_str(stdout, 10, rop);
+    std::cout << std::endl;
+
+    // Convert decrypted result to string (plain text)
+    std::string decryptedMsg = "";
+    size_t len = mpz_sizeinbase(rop, 2) / 8; // Get the length in bytes
+    unsigned char *bytes = new unsigned char[len];
+
+    // Convert mpz_t to bytes
+    mpz_export(bytes, &len, 1, 1, 0, 0, rop);
+
+    // Convert the bytes to a string
+    decryptedMsg = std::string(reinterpret_cast<char *>(bytes), len);
+
+    // Clean up
+    delete[] bytes;
+
+    std::cout << "Plaintext: " << decryptedMsg << std::endl;
+
+    // Write the decrypted message to plaintext.txt
+    std::ofstream output(DECRYPTED_DIR + this->filePlaintext);
+    if (output.is_open())
+    {
+        output << decryptedMsg;
+    }
+    output.close();
+
+    // STORE ROP TO .DEC FILE
+    std::string result = mpz_get_str(nullptr, 10, rop);
+
+    std::string decFile = encFile.replace(encFile.find('.'), 4, DECODE_EXT);
+    std::ofstream out(decFile);
+    if (out.is_open())
+    {
+        out << result;
+    }
+
+    out.close();
+    in_key.close();
+    in_msg.close();
+    return;
 }

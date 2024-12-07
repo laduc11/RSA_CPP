@@ -149,7 +149,7 @@ bool lowLevelPrimalityCheck(mpz_t candidate)
  * @param number_of_bits 
  * @param entropy 
  */
-void nBitsRandomOddNum(mpz_t rop, mp_bitcnt_t number_of_bits, const int entropy = 0)
+void nBitsRandomOddNum(mpz_t rop, mp_bitcnt_t number_of_bits, const int entropy)
 {
     gmp_randstate_t random_state;
     gmp_randinit_mt(random_state);

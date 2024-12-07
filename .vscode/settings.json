@@ -9,6 +9,8 @@
         "fstream": "cpp",
         "bitset": "cpp",
         "sstream": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "source_location": "cpp",
+        "*.tcc": "cpp"
     }
 }
