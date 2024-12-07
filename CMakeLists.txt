@@ -19,6 +19,7 @@ add_executable(
     ${TARGET}
     main.cpp
     src/RSA.cpp
+    src/utils.cpp
 )
 
 target_link_libraries(${TARGET} PRIVATE ${GMP_LIB} ${GMPXX_LIB})

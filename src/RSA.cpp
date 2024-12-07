@@ -10,40 +10,8 @@ RSA::RSA(int p, int q, int e) {
     mpz_set_ui(this->q, q);
     mpz_set_ui(this->e, e);
     mpz_init(d);
-    calcd();
+    calcD();
     mpz_mul(this->n, this->p, this->q);
-}
-
-/**
- * @brief Caculate Greatest Division Common
- * 
- * @param result 
- * @param first 
- * @param second 
- */
-void calcGCD(mpz_t result, const mpz_t first, const mpz_t second) {
-    mpz_t num_1, num_2;
-    mpz_init_set(num_1, first);
-    mpz_init_set(num_2, second);
-
-    // Euler algorithm non-recursion
-    while (mpz_cmp(num_1, num_2)) {
-        // Handle exception GCD with zero
-        if (!mpz_cmp_ui(num_1, 0)) {
-            mpz_set(result, num_2);
-            return;
-        } else if (!mpz_cmp_ui(num_2, 0)) {
-            mpz_set(result, num_1);
-            return;
-        }
-        // Main code block
-        if (mpz_cmp(num_1, num_2) > 0) {
-            mpz_mod(num_1, num_1, num_2);
-        } else {
-            mpz_mod(num_2, num_2, num_1);
-        }
-    }
-    mpz_set(result, num_1);
 }
 
 /**
@@ -53,7 +21,7 @@ void calcGCD(mpz_t result, const mpz_t first, const mpz_t second) {
  * @param e 
  * @param phi 
  */
-void RSA::calcd() {
+void RSA::calcD() {
     // s: sequence
     // r: remainder
     // e * x + phi(n) * y = gcd(e, phi(n))
