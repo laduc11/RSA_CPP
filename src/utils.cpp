@@ -355,3 +355,44 @@ void importDataFromFile(mpz_t des, std::string filename)
 
     delete[] buffer;
 }
+
+/**
+ * @brief Read all data from file and store decimal string into destination variable
+ * 
+ * @param des 
+ * @param filename 
+ */
+void readDataFromFile(mpz_t des, std::string filename)
+{
+    std::fstream file(filename, std::ios::in | std::ios::binary);
+    if (!file) {
+        // Handle exception when open file fail
+        std::cerr << "Error open " << filename << std::endl;
+        return;
+    }
+    std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    mpz_import(des, file_content.size(), 1, 1, 0, 0, file_content.data());
+}
+
+/**
+ * @brief Write data from GMP variable to file
+ * 
+ * @param src 
+ * @param filename 
+ */
+void writeFileFromGMPvariable(mpz_t src, std::string filename)
+{
+    std::fstream file(filename, std::ios::out | std::ios::binary);
+    if (!file) {
+        // Handle exception when open file fail
+        std::cerr << "Error open " << filename << std::endl;
+        return;
+    }
+    size_t count;
+    unsigned char *binaryData = (unsigned char *)mpz_export(nullptr, &count, 1, 1, 0, 0, src);
+    file.write(reinterpret_cast<const char *>(binaryData), count);
+    file.close();
+    free(binaryData);
+}

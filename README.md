@@ -89,19 +89,13 @@ sudo apt-get install limgmp3-dev libgmp10
 # Compile and run project
 
 ## Set up in Ubuntu
-### 1. Create folder `build`
+### 1. Build project
 ```bash
-mkdir -p build
-cd build
+make all
 ```
-### 2. Build sample program
+### 2. Run project
 ```bash
-cmake ..
-make
-```
-### 3. Run program
-```bash
-./main
+make run
 ```
 ## Set up in Window
 ### 1. Install chocolatey

@@ -1,10 +1,14 @@
 #include "main.h"
 #include "RSA.h"
 
-int main()
+int main(int argc, char *argv[])
 {
     RSA rsa;
-    rsa.setFilePlaintext("test1.txt");
+    if (argc > 1) {
+        rsa.setFilePlaintext(argv[1]);
+    } else {
+        rsa.setFilePlaintext("test1.txt");
+    }
     rsa.setFilePublicKey("public1.key");
     rsa.setFilePrivateKey("private1.key");
     auto now = std::chrono::high_resolution_clock::now();

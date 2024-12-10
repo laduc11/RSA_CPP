@@ -183,7 +183,6 @@ void RSA::storeKey()
     std::string e_str = mpz_get_str(nullptr, 16, this->e);
     if (pub.is_open())
     {
-        std::cout << "open success" << std::endl;
         pub << "Public key:\n";
         pub << e_str << '\n';
         pub << "n:\n";
@@ -225,18 +224,13 @@ bool RSA::verified(std::string msgFile, std::string decFile)
  */
 void RSA::encrypt()
 {
-    std::cout << "public file: " << KEY_DIR + this->filePublicKey << std::endl;
-    std::cout << "msg file: " << PLAINTEXT_DIR + this->filePlaintext << std::endl;
+    std::string public_key_file = KEY_DIR + this->filePublicKey, message_file = PLAINTEXT_DIR + this->filePlaintext;
+    std::cout << "public file: " << public_key_file << std::endl;
 
-    std::ifstream in_key(KEY_DIR + this->filePublicKey), in_msg(PLAINTEXT_DIR + this->filePlaintext);
+    std::ifstream in_key(public_key_file), in_msg(message_file);
     if (!in_key.is_open())
     {
         std::cerr << "Error open Public Key file.\n";
-        return;
-    }
-    if (!in_msg.is_open())
-    {
-        std::cerr << "Error opening Message file.\n";
         return;
     }
 
@@ -276,27 +270,20 @@ void RSA::encrypt()
     std::string msg;
     std::stringstream ss;
 
-    // Đọc từng dòng trong tệp và nối vào stringstream
-    while (getline(in_msg, line))
-    {
-        ss << line << "\n"; // Lưu dữ liệu vào stringstream, bao gồm ký tự xuống dòng
-    }
-
-    // Chuyển đổi stringstream thành chuỗi
-    msg = ss.str();
-
+    // Show content of file
     std::cout << "Message: " << std::endl;
+#if defined(_WIN32) || defined(_WIN64)
+    std::string show_content_cmd = "type " + message_file;
+    system(show_content_cmd.c_str());
+#elif defined(__linux__)
+    std::string show_content_cmd = "cat " + message_file;
+    system(show_content_cmd.c_str());
+#endif
 
     mpz_t rop, x;
     mpz_inits(rop, x, nullptr);
 
-    // Chuyển đổi chuỗi tin nhắn thành số nguyên
-    mpz_set_ui(x, 0);
-    for (size_t i = 0; i < msg.size(); ++i)
-    {
-        mpz_mul_ui(x, x, 256);    // Mỗi ký tự có thể biểu diễn bởi một byte
-        mpz_add_ui(x, x, msg[i]); // Thêm giá trị ký tự vào số nguyên
-    }
+    readDataFromFile(x, message_file);
 
     std::cout << "msg (mpz_t) = ";
     mpz_out_str(stdout, 10, x);
@@ -381,29 +368,18 @@ void RSA::decrypt()
     mpz_out_str(stdout, 10, rop);
     std::cout << std::endl;
 
-    // Convert decrypted result to string (plain text)
-    std::string decryptedMsg = "";
-    size_t len = mpz_sizeinbase(rop, 2) / 8; // Get the length in bytes
-    unsigned char *bytes = new unsigned char[len];
+    // Convert decrypted result to string (plain text) and save in folder decrypted
+    std::string decrypted_file = DECRYPTED_DIR + this->filePlaintext;
+    writeFileFromGMPvariable(rop, decrypted_file);
 
-    // Convert mpz_t to bytes
-    mpz_export(bytes, &len, 1, 1, 0, 0, rop);
-
-    // Convert the bytes to a string
-    decryptedMsg = std::string(reinterpret_cast<char *>(bytes), len);
-
-    // Clean up
-    delete[] bytes;
-
-    std::cout << "Plaintext: " << decryptedMsg << std::endl;
-
-    // Write the decrypted message to plaintext.txt
-    std::ofstream output(DECRYPTED_DIR + this->filePlaintext);
-    if (output.is_open())
-    {
-        output << decryptedMsg;
-    }
-    output.close();
+    std::cout << "Plaintext: " << std::endl;
+#if defined(_WIN32) || defined(_WIN64)
+    std::string show_content_cmd = "type " + decrypted_file;
+    system(show_content_cmd.c_str());
+#elif defined(__linux__)
+    std::string show_content_cmd = "cat " + decrypted_file;
+    system(show_content_cmd.c_str());
+#endif
 
     // STORE ROP TO .DEC FILE
     std::string result = mpz_get_str(nullptr, 10, rop);
